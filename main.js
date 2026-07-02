@@ -124,7 +124,7 @@ function validateForm(data) {
   if (dni.length !== String(data.dni || "").replace(/[^0-9]/g, "").length) {
     errors.dni = "El DNI debe tener como máximo 8 números.";
   }
-  if (dni && !/^[0-9]{7,8}$/.test(dni)) errors.dni = "Ingresá un DNI válido de 7 u 8 números.";
+  if (dni && !/^[0-9]{7,8}$/.test(dni)) errors.dni = "Ingresá un DNI válido de 8 números.";
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = "Ingresá un email válido.";
   if (data.phone && !/^[0-9+()\-\s]{6,40}$/.test(data.phone)) errors.phone = "Ingresá un teléfono válido.";
   if (data.gender && !GENDER_VALUES.includes(data.gender)) errors.gender = "Seleccioná una opción válida.";
@@ -177,7 +177,7 @@ successDialogClose.addEventListener("click", () => successDialog.close());
 dniInput.addEventListener("input", () => {
   const normalized = normalizeDni(dniInput.value);
   dniInput.value = normalized;
-  dniPreview.textContent = normalized ? `DNI: ${normalized}` : "Ingresá 7 u 8 números, sin puntos.";
+  dniPreview.textContent = normalized ? `DNI: ${normalized}` : "Ingresá 8 números, sin puntos.";
 });
 
 form.addEventListener("submit", async (event) => {
@@ -222,7 +222,7 @@ form.addEventListener("submit", async (event) => {
     if (response.status === 201 && body.status === "accepted") {
       form.reset();
       updateOtherAcademicUnitVisibility();
-      dniPreview.textContent = "Ingresá 7 u 8 números, sin puntos.";
+      dniPreview.textContent = "Ingresá 8 números, sin puntos.";
       showSuccessPopup();
     } else if (response.status === 409 || body.status === "duplicate") {
       showResult("duplicate", "Ya existe una inscripción registrada con ese DNI.");

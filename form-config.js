@@ -2,8 +2,9 @@
   const formConfig = {
     // Desde las 00:00 de esta fecha el formulario deja de mostrarse.
     // Cambiá solo este valor cuando definas la fecha final.
-    expiresAt: "2026-12-31T00:00:00-03:00",
-    expiredMessage: "El formulario de inscripción ya no se encuentra disponible.",
+    expiresAt: "2026-06-30T00:00:00-03:00",
+    expiredMessage:
+      "El formulario de inscripción ya no se encuentra disponible.",
   };
 
   if (globalScope) {
