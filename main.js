@@ -151,11 +151,20 @@ function showResult(status, message) {
 }
 
 function showSuccessPopup() {
-  if (successDialog?.showModal) {
-    successDialog.showModal();
-  } else {
-    window.alert("Tu inscripción fue recibida correctamente.");
+  try {
+    if (
+      successDialog &&
+      typeof successDialog.showModal === "function" &&
+      !successDialog.open
+    ) {
+      successDialog.showModal();
+      return;
+    }
+  } catch (error) {
+    console.error("No se pudo abrir el popup de éxito:", error);
   }
+
+  window.alert("Tu inscripción fue recibida correctamente.");
 }
 
 function isStaticFilePreview() {
@@ -172,7 +181,9 @@ loadAcademicUnits();
 updateOtherAcademicUnitVisibility();
 
 academicUnitSelect.addEventListener("change", updateOtherAcademicUnitVisibility);
-successDialogClose.addEventListener("click", () => successDialog.close());
+if (successDialogClose && successDialog) {
+  successDialogClose.addEventListener("click", () => successDialog.close());
+}
 
 dniInput.addEventListener("input", () => {
   const normalized = normalizeDni(dniInput.value);
@@ -211,35 +222,88 @@ form.addEventListener("submit", async (event) => {
   submitButton.disabled = true;
   submitButton.textContent = "Enviando…";
 
+  let response;
+  let body = {};
+
   try {
-    const response = await fetch(SUBMIT_ENDPOINT, {
+    response = await fetch(SUBMIT_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const body = await response.json().catch(() => ({}));
 
-    if (response.status === 201 && body.status === "accepted") {
+    body = await response.json().catch(() => ({}));
+  } catch (error) {
+    console.error("Error de conexión al enviar el formulario:", error);
+    showResult(
+      "network",
+      "No pudimos conectar con el servidor. Revisá la conexión e intentá nuevamente.",
+    );
+    submitButton.disabled = false;
+    submitButton.textContent = "Enviar inscripción";
+    return;
+  }
+
+  try {
+    if (
+      response.ok &&
+      (body.status === "accepted" ||
+        body.status === "ok" ||
+        body.status === "created")
+    ) {
       form.reset();
       updateOtherAcademicUnitVisibility();
-      dniPreview.textContent = "Ingresá 8 números, sin puntos.";
+
+      if (dniPreview) {
+        dniPreview.textContent = "Ingresá 8 números, sin puntos.";
+      }
+
+      result.hidden = true;
       showSuccessPopup();
-    } else if (response.status === 409 || body.status === "duplicate") {
-      showResult("duplicate", "Ya existe una inscripción registrada con ese DNI.");
-    } else if (response.status === 400 || body.status === "invalid") {
+      return;
+    }
+
+    if (response.status === 409 || body.status === "duplicate") {
+      showResult(
+        "duplicate",
+        "Ya existe una inscripción registrada con ese DNI.",
+      );
+      return;
+    }
+
+    if (response.status === 400 || body.status === "invalid") {
       applyServerFieldErrors(body.fields || {});
       showResult("invalid", "Revisá los campos marcados antes de enviar.");
-    } else if (response.status === 410 || body.status === "expired") {
+      return;
+    }
+
+    if (response.status === 410 || body.status === "expired") {
       document.querySelector("#form-view").hidden = true;
       document.querySelector("#splash").hidden = false;
       showExpiredMessage();
-    } else if (response.status === 429 || body.status === "rate_limited") {
-      showResult("rate_limited", "Esperá unos minutos antes de volver a intentar.");
-    } else {
-      showResult("failed", "No pudimos completar la inscripción. Intentá nuevamente más tarde.");
+      return;
     }
-  } catch (_error) {
-    showResult("network", "No pudimos conectar con el servidor. Revisá la conexión e intentá nuevamente.");
+
+    if (response.status === 429 || body.status === "rate_limited") {
+      showResult(
+        "rate_limited",
+        "Esperá unos minutos antes de volver a intentar.",
+      );
+      return;
+    }
+
+    showResult(
+      "failed",
+      body.message ||
+        "No pudimos completar la inscripción. Intentá nuevamente más tarde.",
+    );
+  } catch (error) {
+    console.error("El servidor respondió, pero falló la interfaz:", error);
+
+    showResult(
+      "success",
+      "La inscripción fue recibida correctamente. Podés cerrar esta ventana.",
+    );
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = "Enviar inscripción";
