@@ -7,7 +7,7 @@ Lightweight first slice for a public enrollment flow: static HTML/CSS/JavaScript
 1. Copy `.env.example` to `.env.local` in Vercel/local development.
 2. Replace the placeholder `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` values with the real Supabase project values when you are ready to submit records. Keep the service-role key server-only in Vercel/local env; never put it in browser code.
 3. Set `ALLOWED_ORIGIN` to the deployed site origin.
-4. Run `sql/001_enrollment_submissions.sql` in the Supabase SQL editor.
+4. Run `sql/001_enrollment_submissions.sql` in the Supabase SQL editor. If you had already created the older table, see `sql/002_migrate_dni_and_other_unit.sql`.
 5. Add the production splash image at `assets/splash.jpg`.
 
 ## Academic units
@@ -16,7 +16,18 @@ The academic-unit list is centralized in `academic-units.js`. The browser loads 
 
 The database intentionally does not duplicate the controlled list in a `CHECK` constraint. This keeps the project simple and avoids editing SQL every time the final list changes. Server-side validation in `api/submit.js` remains the source of truth before inserting into Supabase.
 
-Replace `MOCK_ACADEMIC_UNITS` with the definitive values before production intake.
+Use the id `otra-unidad-academica` for the option that should display the extra free-text field. When that option is selected, the app stores the controlled value in `academic_unit` and the entered value in the nullable `other_academic_unit` column.
+
+## Form closing date
+
+The closing date and the closed-form message are centralized in `form-config.js`:
+
+```js
+expiresAt: "2026-12-31T00:00:00-03:00",
+expiredMessage: "El formulario de inscripción ya no se encuentra disponible.",
+```
+
+From that exact date at 00:00 Argentina time, the browser no longer shows the form. The server-side endpoint also rejects direct submissions with HTTP `410`, so the closing rule is not only visual.
 
 ## Local run
 
@@ -34,7 +45,7 @@ vercel dev
 
 - Do not expose `SUPABASE_SERVICE_ROLE_KEY` in browser code or `NEXT_PUBLIC_`/client-prefixed variables.
 - All writes go through `POST /api/submit`.
-- DNI is normalized server-side before persistence and protected by a unique constraint.
+- DNI is normalized to the single `dni` column, must have 7 or 8 digits, and is protected by a unique constraint.
 - The honeypot and in-memory rate limit are first-slice abuse seams, not a durable anti-abuse system.
 
 ## Manual test checklist
@@ -45,10 +56,11 @@ vercel dev
 - Running through `vercel dev` keeps `POST /api/submit` available for endpoint checks.
 - Required fields show field-level attention.
 - Allowed gender values are exactly `Femenino`, `Masculino`, `No binario`, and `Otro`.
-- Academic unit rejects values outside the controlled list.
-- A valid submission returns a success message.
-- A repeated DNI variant returns the duplicate message.
+- Academic unit rejects values outside the controlled list. Selecting `Otra unidad académica` requires the extra text field.
+- A valid submission opens the success popup.
+- A repeated DNI returns the duplicate message.
 - Browser assets do not contain Supabase service-role credentials.
+- After the closing date in `form-config.js`, the form is hidden and `POST /api/submit` returns `410`.
 
 ## Lightweight local verification
 

@@ -7,6 +7,7 @@
     <title>Formulario de inscripción</title>
     <link rel="stylesheet" href="styles.css" />
     <script defer src="academic-units.js"></script>
+    <script defer src="form-config.js"></script>
     <script defer src="main.js"></script>
   </head>
   <body>
@@ -29,35 +30,69 @@
           <header class="hero">
             <p class="eyebrow">Inscripción</p>
             <h1>Formulario de inscripción</h1>
-            <p>Completá tus datos para registrar la solicitud. Todos los campos son obligatorios.</p>
+            <p>
+              Completá tus datos para registrar la solicitud. Todos los campos
+              son obligatorios, salvo que se indique lo contrario.
+            </p>
           </header>
 
-          <div id="result" class="result" role="status" aria-live="polite" hidden></div>
+          <div
+            id="result"
+            class="result"
+            role="status"
+            aria-live="polite"
+            hidden
+          ></div>
 
           <form id="enrollment-form" novalidate>
             <div class="field">
               <label for="firstNames">Nombre(s)</label>
-              <input id="firstNames" name="firstNames" type="text" autocomplete="given-name" required maxlength="120" />
+              <input
+                id="firstNames"
+                name="firstNames"
+                type="text"
+                autocomplete="given-name"
+                required
+                maxlength="120"
+              />
               <p class="field-error" id="firstNames-error"></p>
             </div>
 
             <div class="field">
               <label for="lastNames">Apellido(s)</label>
-              <input id="lastNames" name="lastNames" type="text" autocomplete="family-name" required maxlength="120" />
+              <input
+                id="lastNames"
+                name="lastNames"
+                type="text"
+                autocomplete="family-name"
+                required
+                maxlength="120"
+              />
               <p class="field-error" id="lastNames-error"></p>
             </div>
 
             <div class="field">
               <label for="dni">DNI</label>
-              <input id="dni" name="dni" type="text" inputmode="numeric" autocomplete="off" required maxlength="20" />
-              <p class="hint" id="dni-preview">Se guardará normalizado solo con números.</p>
+              <input
+                id="dni"
+                name="dni"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                required
+                minlength="8"
+                maxlength="8"
+                pattern="[0-9]{8,8}"
+              />
               <p class="field-error" id="dni-error"></p>
             </div>
 
             <div class="field">
               <label for="gender">Género</label>
               <select id="gender" name="gender" required>
-                <option value="">Seleccioná una opción</option>
+                <option value="" disabled selected>
+                  Seleccioná una opción
+                </option>
                 <option value="Femenino">Femenino</option>
                 <option value="Masculino">Masculino</option>
                 <option value="No binario">No binario</option>
@@ -68,34 +103,94 @@
 
             <div class="field">
               <label for="email">Email</label>
-              <input id="email" name="email" type="email" autocomplete="email" required maxlength="160" />
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                required
+                maxlength="160"
+              />
               <p class="field-error" id="email-error"></p>
             </div>
 
             <div class="field">
               <label for="phone">Teléfono</label>
-              <input id="phone" name="phone" type="tel" autocomplete="tel" required maxlength="40" />
+              <input
+                id="phone"
+                name="phone"
+                type="tel"
+                autocomplete="tel"
+                required
+                maxlength="40"
+              />
               <p class="field-error" id="phone-error"></p>
             </div>
 
             <div class="field">
-              <label for="academicUnit">Unidad académica</label>
+              <label for="academicUnit"
+                >Unidad académica/Escuela/Institución</label
+              >
               <p class="hint" id="academicUnit-hint"></p>
               <select id="academicUnit" name="academicUnit" required>
-                <option value="">Seleccioná una unidad</option>
+                <option value="" disabled selected>
+                  Seleccioná una unidad
+                </option>
               </select>
               <p class="field-error" id="academicUnit-error"></p>
             </div>
 
+            <div class="field" id="otherAcademicUnit-field" hidden>
+              <label for="otherAcademicUnit"
+                >Nombre de la unidad académica</label
+              >
+              <input
+                id="otherAcademicUnit"
+                name="otherAcademicUnit"
+                type="text"
+                maxlength="180"
+              />
+              <p class="field-error" id="otherAcademicUnit-error"></p>
+            </div>
+
             <div class="field">
-              <label for="placeOfBelonging">Lugar de pertenencia</label>
-              <input id="placeOfBelonging" name="placeOfBelonging" type="text" required maxlength="160" />
+              <label for="placeOfBelonging">Departamento de Residencia</label>
+              <select id="placeOfBelonging" name="placeOfBelonging" required>
+                <option value="" disabled selected>
+                  Seleccioná un departamento
+                </option>
+                <option value="Albardón">Albardón</option>
+                <option value="Angaco">Angaco</option>
+                <option value="Calingasta">Calingasta</option>
+                <option value="Capital">Capital</option>
+                <option value="Caucete">Caucete</option>
+                <option value="Chimbas">Chimbas</option>
+                <option value="Iglesia">Iglesia</option>
+                <option value="Jáchal">Jáchal</option>
+                <option value="Pocito">Pocito</option>
+                <option value="Rawson">Rawson</option>
+                <option value="Rivadavia">Rivadavia</option>
+                <option value="San Martín">San Martín</option>
+                <option value="Santa Lucía">Santa Lucía</option>
+                <option value="Sarmiento">Sarmiento</option>
+                <option value="Ullum">Ullum</option>
+                <option value="Valle Fértil">Valle Fértil</option>
+                <option value="Zonda">Zonda</option>
+                <option value="25 de Mayo">25 de Mayo</option>
+                <option value="9 de Julio">9 de Julio</option>
+              </select>
               <p class="field-error" id="placeOfBelonging-error"></p>
             </div>
 
             <div class="hp-field" aria-hidden="true">
               <label for="website">Sitio web</label>
-              <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+              <input
+                id="website"
+                name="website"
+                type="text"
+                tabindex="-1"
+                autocomplete="off"
+              />
             </div>
 
             <button id="submit-button" type="submit">Enviar inscripción</button>
@@ -103,5 +198,13 @@
         </div>
       </section>
     </main>
+
+    <dialog id="success-dialog" class="dialog">
+      <div class="dialog__content">
+        <h2>Inscripción recibida</h2>
+        <p>Tu inscripción fue recibida correctamente.</p>
+        <button type="button" id="success-dialog-close">Aceptar</button>
+      </div>
+    </dialog>
   </body>
 </html>

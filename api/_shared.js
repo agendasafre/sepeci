@@ -1,4 +1,5 @@
 const { ACADEMIC_UNITS } = require("../academic-units");
+const { FORM_CONFIG } = require("../form-config");
 
 const MAX_BODY_BYTES = 12 * 1024;
 
@@ -47,6 +48,21 @@ function getAcademicUnits() {
   return ACADEMIC_UNITS;
 }
 
+function getFormConfig() {
+  return FORM_CONFIG;
+}
+
+function getFormExpiryDate() {
+  if (!FORM_CONFIG?.expiresAt) return null;
+  const expiryDate = new Date(FORM_CONFIG.expiresAt);
+  return Number.isNaN(expiryDate.getTime()) ? null : expiryDate;
+}
+
+function isFormExpired() {
+  const expiryDate = getFormExpiryDate();
+  return expiryDate ? Date.now() >= expiryDate.getTime() : false;
+}
+
 module.exports = {
   MAX_BODY_BYTES,
   send,
@@ -54,4 +70,6 @@ module.exports = {
   isAllowedOrigin,
   getSupabaseConfig,
   getAcademicUnits,
+  getFormConfig,
+  isFormExpired,
 };

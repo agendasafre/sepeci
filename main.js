@@ -1,5 +1,6 @@
 const GENDER_VALUES = ["Femenino", "Masculino", "No binario", "Otro"];
 const academicUnits = window.ACADEMIC_UNITS || [];
+const formConfig = window.FORM_CONFIG || {};
 
 const form = document.querySelector("#enrollment-form");
 const result = document.querySelector("#result");
@@ -8,9 +9,39 @@ const dniInput = document.querySelector("#dni");
 const dniPreview = document.querySelector("#dni-preview");
 const academicUnitSelect = document.querySelector("#academicUnit");
 const academicUnitHint = document.querySelector("#academicUnit-hint");
+const otherAcademicUnitField = document.querySelector("#otherAcademicUnit-field");
+const otherAcademicUnitInput = document.querySelector("#otherAcademicUnit");
+const successDialog = document.querySelector("#success-dialog");
+const successDialogClose = document.querySelector("#success-dialog-close");
 const SUBMIT_ENDPOINT = "/api/submit";
 
+function getFormExpiryDate() {
+  if (!formConfig.expiresAt) return null;
+  const expiryDate = new Date(formConfig.expiresAt);
+  return Number.isNaN(expiryDate.getTime()) ? null : expiryDate;
+}
+
+function isFormExpired() {
+  const expiryDate = getFormExpiryDate();
+  return expiryDate ? Date.now() >= expiryDate.getTime() : false;
+}
+
+function showExpiredMessage() {
+  const splash = document.querySelector("#splash");
+  const card = splash.querySelector(".splash__card");
+  card.innerHTML = `
+    <p class="eyebrow">Inscripción</p>
+    <h1>Formulario cerrado</h1>
+    <p class="splash__text">${formConfig.expiredMessage || "El formulario ya no se encuentra disponible."}</p>
+  `;
+}
+
 function showForm() {
+  if (isFormExpired()) {
+    showExpiredMessage();
+    return;
+  }
+
   document.querySelector("#splash").hidden = true;
   document.querySelector("#form-view").hidden = false;
   document.querySelector("#firstNames").focus();
@@ -19,7 +50,11 @@ function showForm() {
 window.setTimeout(showForm, 2400);
 
 function normalizeDni(value) {
-  return String(value || "").replace(/[^0-9]/g, "");
+  return String(value || "").replace(/[^0-9]/g, "").slice(0, 8);
+}
+
+function isOtherAcademicUnit(unitId) {
+  return unitId === "otra-unidad-academica";
 }
 
 function renderAcademicUnitOptions(units) {
@@ -42,6 +77,17 @@ function loadAcademicUnits() {
   academicUnitHint.textContent = "";
 }
 
+function updateOtherAcademicUnitVisibility() {
+  const shouldShow = isOtherAcademicUnit(academicUnitSelect.value);
+  otherAcademicUnitField.hidden = !shouldShow;
+  otherAcademicUnitInput.required = shouldShow;
+
+  if (!shouldShow) {
+    otherAcademicUnitInput.value = "";
+    setFieldError("otherAcademicUnit");
+  }
+}
+
 function setFieldError(name, message = "") {
   const input = form.elements[name];
   const field = input?.closest(".field");
@@ -53,9 +99,17 @@ function setFieldError(name, message = "") {
 }
 
 function clearErrors() {
-  ["firstNames", "lastNames", "dni", "gender", "email", "phone", "academicUnit", "placeOfBelonging"].forEach((name) =>
-    setFieldError(name),
-  );
+  [
+    "firstNames",
+    "lastNames",
+    "dni",
+    "gender",
+    "email",
+    "phone",
+    "academicUnit",
+    "otherAcademicUnit",
+    "placeOfBelonging",
+  ].forEach((name) => setFieldError(name));
 }
 
 function validateForm(data) {
@@ -67,12 +121,20 @@ function validateForm(data) {
   });
 
   const dni = normalizeDni(data.dni);
-  if (dni && (dni.length < 7 || dni.length > 10)) errors.dni = "Ingresá un DNI válido, solo con números.";
+  if (dni.length !== String(data.dni || "").replace(/[^0-9]/g, "").length) {
+    errors.dni = "El DNI debe tener como máximo 8 números.";
+  }
+  if (dni && !/^[0-9]{7,8}$/.test(dni)) errors.dni = "Ingresá un DNI válido de 7 u 8 números.";
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = "Ingresá un email válido.";
   if (data.phone && !/^[0-9+()\-\s]{6,40}$/.test(data.phone)) errors.phone = "Ingresá un teléfono válido.";
   if (data.gender && !GENDER_VALUES.includes(data.gender)) errors.gender = "Seleccioná una opción válida.";
+
   if (data.academicUnit && !academicUnits.some((unit) => unit.id === data.academicUnit)) {
     errors.academicUnit = "Seleccioná una unidad válida.";
+  }
+
+  if (isOtherAcademicUnit(data.academicUnit) && !String(data.otherAcademicUnit || "").trim()) {
+    errors.otherAcademicUnit = "Indicá el nombre de la unidad académica.";
   }
 
   return errors;
@@ -88,6 +150,14 @@ function showResult(status, message) {
   result.textContent = message;
 }
 
+function showSuccessPopup() {
+  if (successDialog?.showModal) {
+    successDialog.showModal();
+  } else {
+    window.alert("Tu inscripción fue recibida correctamente.");
+  }
+}
+
 function isStaticFilePreview() {
   return window.location.protocol === "file:";
 }
@@ -99,16 +169,28 @@ function applyServerFieldErrors(fields = {}) {
 }
 
 loadAcademicUnits();
+updateOtherAcademicUnitVisibility();
+
+academicUnitSelect.addEventListener("change", updateOtherAcademicUnitVisibility);
+successDialogClose.addEventListener("click", () => successDialog.close());
 
 dniInput.addEventListener("input", () => {
   const normalized = normalizeDni(dniInput.value);
-  dniPreview.textContent = normalized ? `DNI normalizado: ${normalized}` : "Se guardará normalizado solo con números.";
+  dniInput.value = normalized;
+  dniPreview.textContent = normalized ? `DNI: ${normalized}` : "Ingresá 7 u 8 números, sin puntos.";
 });
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   clearErrors();
   result.hidden = true;
+
+  if (isFormExpired()) {
+    document.querySelector("#form-view").hidden = true;
+    document.querySelector("#splash").hidden = false;
+    showExpiredMessage();
+    return;
+  }
 
   const payload = collectFormData();
   const errors = validateForm(payload);
@@ -138,14 +220,19 @@ form.addEventListener("submit", async (event) => {
     const body = await response.json().catch(() => ({}));
 
     if (response.status === 201 && body.status === "accepted") {
-      showResult("success", "Tu inscripción fue recibida correctamente.");
       form.reset();
-      dniPreview.textContent = "Se guardará normalizado solo con números.";
+      updateOtherAcademicUnitVisibility();
+      dniPreview.textContent = "Ingresá 7 u 8 números, sin puntos.";
+      showSuccessPopup();
     } else if (response.status === 409 || body.status === "duplicate") {
       showResult("duplicate", "Ya existe una inscripción registrada con ese DNI.");
     } else if (response.status === 400 || body.status === "invalid") {
       applyServerFieldErrors(body.fields || {});
       showResult("invalid", "Revisá los campos marcados antes de enviar.");
+    } else if (response.status === 410 || body.status === "expired") {
+      document.querySelector("#form-view").hidden = true;
+      document.querySelector("#splash").hidden = false;
+      showExpiredMessage();
     } else if (response.status === 429 || body.status === "rate_limited") {
       showResult("rate_limited", "Esperá unos minutos antes de volver a intentar.");
     } else {

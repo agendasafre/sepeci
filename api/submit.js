@@ -4,6 +4,7 @@ const {
   getAcademicUnits,
   getSupabaseConfig,
   isAllowedOrigin,
+  isFormExpired,
   send,
   setCors,
 } = require("./_shared");
@@ -12,6 +13,10 @@ const rateLimitHits = new Map();
 
 function normalizeDni(value) {
   return String(value || "").replace(/[^0-9]/g, "");
+}
+
+function isOtherAcademicUnit(unitId) {
+  return unitId === "otra-unidad-academica";
 }
 
 function getClientKey(req) {
@@ -61,13 +66,27 @@ function validatePayload(payload, academicUnits) {
   const clean = {};
   let selectedAcademicUnit = null;
 
-  for (const key of ["firstNames", "lastNames", "dni", "gender", "email", "phone", "academicUnit", "placeOfBelonging"]) {
+  for (const key of [
+    "firstNames",
+    "lastNames",
+    "dni",
+    "gender",
+    "email",
+    "phone",
+    "academicUnit",
+    "otherAcademicUnit",
+    "placeOfBelonging",
+  ]) {
     clean[key] = String(payload[key] || "").trim();
+  }
+
+  for (const key of ["firstNames", "lastNames", "dni", "gender", "email", "phone", "academicUnit", "placeOfBelonging"]) {
     if (!clean[key]) fields[key] = "Este campo es obligatorio.";
   }
 
-  const dniNormalized = normalizeDni(clean.dni);
-  if (dniNormalized.length < 7 || dniNormalized.length > 10) fields.dni = "Ingresá un DNI válido.";
+  const dni = normalizeDni(clean.dni);
+  if (clean.dni && clean.dni !== dni) fields.dni = "Ingresá el DNI solo con números.";
+  if (!/^[0-9]{7,8}$/.test(dni)) fields.dni = "Ingresá un DNI válido de 7 u 8 números.";
   if (clean.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean.email)) fields.email = "Ingresá un email válido.";
   if (clean.phone && !/^[0-9+()\-\s]{6,40}$/.test(clean.phone)) fields.phone = "Ingresá un teléfono válido.";
   if (clean.gender && !GENDER_VALUES.includes(clean.gender)) fields.gender = "Seleccioná una opción válida.";
@@ -77,10 +96,18 @@ function validatePayload(payload, academicUnits) {
     if (!selectedAcademicUnit) fields.academicUnit = "Seleccioná una unidad válida.";
   }
 
-  return { fields, clean, dniNormalized, selectedAcademicUnit };
+  if (isOtherAcademicUnit(clean.academicUnit) && !clean.otherAcademicUnit) {
+    fields.otherAcademicUnit = "Indicá el nombre de la unidad académica.";
+  }
+
+  if (clean.otherAcademicUnit && clean.otherAcademicUnit.length > 180) {
+    fields.otherAcademicUnit = "El nombre de la unidad académica es demasiado largo.";
+  }
+
+  return { fields, clean, dni, selectedAcademicUnit };
 }
 
-async function insertSubmission(clean, dniNormalized, selectedAcademicUnit) {
+async function insertSubmission(clean, dni, selectedAcademicUnit) {
   const { supabaseUrl, serviceRoleKey } = getSupabaseConfig();
 
   const response = await fetch(`${supabaseUrl}/rest/v1/enrollment_submissions`, {
@@ -94,13 +121,13 @@ async function insertSubmission(clean, dniNormalized, selectedAcademicUnit) {
     body: JSON.stringify({
       first_names: clean.firstNames,
       last_names: clean.lastNames,
-      dni: clean.dni,
-      dni_normalized: dniNormalized,
+      dni,
       gender: clean.gender,
       email: clean.email,
       phone: clean.phone,
       academic_unit_id: selectedAcademicUnit.id,
       academic_unit: selectedAcademicUnit.name,
+      other_academic_unit: isOtherAcademicUnit(selectedAcademicUnit.id) ? clean.otherAcademicUnit : null,
       place_of_belonging: clean.placeOfBelonging,
       metadata: {},
     }),
@@ -135,6 +162,11 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  if (isFormExpired()) {
+    send(res, 410, { status: "expired" });
+    return;
+  }
+
   if (isRateLimited(req)) {
     send(res, 429, { status: "rate_limited" });
     return;
@@ -158,13 +190,13 @@ module.exports = async function handler(req, res) {
     }
 
     const academicUnits = getAcademicUnits();
-    const { fields, clean, dniNormalized, selectedAcademicUnit } = validatePayload(payload, academicUnits);
+    const { fields, clean, dni, selectedAcademicUnit } = validatePayload(payload, academicUnits);
     if (Object.keys(fields).length > 0) {
       send(res, 400, { status: "invalid", fields });
       return;
     }
 
-    await insertSubmission(clean, dniNormalized, selectedAcademicUnit);
+    await insertSubmission(clean, dni, selectedAcademicUnit);
     send(res, 201, { status: "accepted" });
   } catch (error) {
     if (error instanceof SyntaxError) {
