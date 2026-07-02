@@ -13,6 +13,9 @@ const otherAcademicUnitField = document.querySelector("#otherAcademicUnit-field"
 const otherAcademicUnitInput = document.querySelector("#otherAcademicUnit");
 const successDialog = document.querySelector("#success-dialog");
 const successDialogClose = document.querySelector("#success-dialog-close");
+const duplicateDialog = document.querySelector("#duplicate-dialog");
+const duplicateDialogClose = document.querySelector("#duplicate-dialog-close");
+const phoneInput = document.querySelector("#phone");
 const SUBMIT_ENDPOINT = "/api/submit";
 
 function getFormExpiryDate() {
@@ -126,7 +129,10 @@ function validateForm(data) {
   }
   if (dni && !/^[0-9]{7,8}$/.test(dni)) errors.dni = "Ingresá un DNI válido de 8 números.";
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = "Ingresá un email válido.";
-  if (data.phone && !/^[0-9+()\-\s]{6,40}$/.test(data.phone)) errors.phone = "Ingresá un teléfono válido.";
+  if (data.phone && !/^[0-9]{1,14}$/.test(data.phone)) {
+    errors.phone =
+      "Ingresá un teléfono válido, solo con números y hasta 14 caracteres.";
+  }
   if (data.gender && !GENDER_VALUES.includes(data.gender)) errors.gender = "Seleccioná una opción válida.";
 
   if (data.academicUnit && !academicUnits.some((unit) => unit.id === data.academicUnit)) {
@@ -167,6 +173,23 @@ function showSuccessPopup() {
   window.alert("Tu inscripción fue recibida correctamente.");
 }
 
+function showDuplicatePopup() {
+  try {
+    if (
+      duplicateDialog &&
+      typeof duplicateDialog.showModal === "function" &&
+      !duplicateDialog.open
+    ) {
+      duplicateDialog.showModal();
+      return;
+    }
+  } catch (error) {
+    console.error("No se pudo abrir el popup de DNI duplicado:", error);
+  }
+
+  window.alert("Ya existe una inscripción registrada con ese DNI.");
+}
+
 function isStaticFilePreview() {
   return window.location.protocol === "file:";
 }
@@ -185,10 +208,18 @@ if (successDialogClose && successDialog) {
   successDialogClose.addEventListener("click", () => successDialog.close());
 }
 
+if (duplicateDialogClose && duplicateDialog) {
+  duplicateDialogClose.addEventListener("click", () => duplicateDialog.close());
+}
+
 dniInput.addEventListener("input", () => {
   const normalized = normalizeDni(dniInput.value);
   dniInput.value = normalized;
   dniPreview.textContent = normalized ? `DNI: ${normalized}` : "Ingresá 8 números, sin puntos.";
+});
+
+phoneInput.addEventListener("input", () => {
+  phoneInput.value = phoneInput.value.replace(/[^0-9]/g, "").slice(0, 14);
 });
 
 form.addEventListener("submit", async (event) => {
@@ -262,12 +293,9 @@ form.addEventListener("submit", async (event) => {
       showSuccessPopup();
       return;
     }
-
     if (response.status === 409 || body.status === "duplicate") {
-      showResult(
-        "duplicate",
-        "Ya existe una inscripción registrada con ese DNI.",
-      );
+      result.hidden = true;
+      showDuplicatePopup();
       return;
     }
 

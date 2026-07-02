@@ -88,7 +88,10 @@ function validatePayload(payload, academicUnits) {
   if (clean.dni && clean.dni !== dni) fields.dni = "Ingresá el DNI solo con números.";
   if (!/^[0-9]{7,8}$/.test(dni)) fields.dni = "Ingresá un DNI válido de 7 u 8 números.";
   if (clean.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean.email)) fields.email = "Ingresá un email válido.";
-  if (clean.phone && !/^[0-9+()\-\s]{6,40}$/.test(clean.phone)) fields.phone = "Ingresá un teléfono válido.";
+  if (clean.phone && !/^[0-9]{1,14}$/.test(clean.phone)) {
+    fields.phone =
+      "Ingresá un teléfono válido, solo con números y hasta 14 caracteres.";
+  }
   if (clean.gender && !GENDER_VALUES.includes(clean.gender)) fields.gender = "Seleccioná una opción válida.";
 
   if (clean.academicUnit) {
