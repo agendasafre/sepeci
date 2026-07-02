@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Formulario de inscripción</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="mock-academic-units.js"></script>
+    <script defer src="main.js"></script>
+  </head>
+  <body>
+    <main>
+      <section id="splash" class="splash" aria-label="Pantalla de inicio">
+        <div class="splash__card">
+          <img
+            class="splash__image"
+            src="assets/splash.jpg"
+            alt="Imagen de bienvenida"
+            width="360"
+            height="360"
+          />
+          <p class="splash__text">Cargando formulario de inscripción…</p>
+        </div>
+      </section>
+
+      <section id="form-view" class="form-view" hidden>
+        <div class="panel">
+          <header class="hero">
+            <p class="eyebrow">Inscripción</p>
+            <h1>Formulario de inscripción</h1>
+            <p>Completá tus datos para registrar la solicitud. Todos los campos son obligatorios.</p>
+          </header>
+
+          <div id="result" class="result" role="status" aria-live="polite" hidden></div>
+
+          <form id="enrollment-form" novalidate>
+            <div class="field">
+              <label for="firstNames">Nombre(s)</label>
+              <input id="firstNames" name="firstNames" type="text" autocomplete="given-name" required maxlength="120" />
+              <p class="field-error" id="firstNames-error"></p>
+            </div>
+
+            <div class="field">
+              <label for="lastNames">Apellido(s)</label>
+              <input id="lastNames" name="lastNames" type="text" autocomplete="family-name" required maxlength="120" />
+              <p class="field-error" id="lastNames-error"></p>
+            </div>
+
+            <div class="field">
+              <label for="dni">DNI</label>
+              <input id="dni" name="dni" type="text" inputmode="numeric" autocomplete="off" required maxlength="20" />
+              <p class="hint" id="dni-preview">Se guardará normalizado solo con números.</p>
+              <p class="field-error" id="dni-error"></p>
+            </div>
+
+            <div class="field">
+              <label for="gender">Género</label>
+              <select id="gender" name="gender" required>
+                <option value="">Seleccioná una opción</option>
+                <option value="Femenino">Femenino</option>
+                <option value="Masculino">Masculino</option>
+                <option value="No binario">No binario</option>
+                <option value="Otro">Otro</option>
+              </select>
+              <p class="field-error" id="gender-error"></p>
+            </div>
+
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" required maxlength="160" />
+              <p class="field-error" id="email-error"></p>
+            </div>
+
+            <div class="field">
+              <label for="phone">Teléfono</label>
+              <input id="phone" name="phone" type="tel" autocomplete="tel" required maxlength="40" />
+              <p class="field-error" id="phone-error"></p>
+            </div>
+
+            <div class="field">
+              <label for="academicUnit">Unidad académica</label>
+              <p class="hint mock-note">Lista provisoria/mock: se reemplazará por la lista definitiva antes de producción.</p>
+              <select id="academicUnit" name="academicUnit" required>
+                <option value="">Seleccioná una unidad</option>
+                <option value="Rectorado">Rectorado</option>
+                <option value="Facultad de Ciencias Exactas">Facultad de Ciencias Exactas</option>
+                <option value="Facultad de Ciencias Humanas">Facultad de Ciencias Humanas</option>
+                <option value="Facultad de Ciencias Sociales">Facultad de Ciencias Sociales</option>
+                <option value="Facultad de Ingeniería">Facultad de Ingeniería</option>
+                <option value="Otra unidad académica">Otra unidad académica</option>
+              </select>
+              <p class="field-error" id="academicUnit-error"></p>
+            </div>
+
+            <div class="field">
+              <label for="placeOfBelonging">Lugar de pertenencia</label>
+              <input id="placeOfBelonging" name="placeOfBelonging" type="text" required maxlength="160" />
+              <p class="field-error" id="placeOfBelonging-error"></p>
+            </div>
+
+            <div class="hp-field" aria-hidden="true">
+              <label for="website">Sitio web</label>
+              <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+
+            <button id="submit-button" type="submit">Enviar inscripción</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
