@@ -129,9 +129,9 @@ function validateForm(data) {
   }
   if (dni && !/^[0-9]{7,8}$/.test(dni)) errors.dni = "Ingresá un DNI válido de 8 números.";
   if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errors.email = "Ingresá un email válido.";
-  if (data.phone && !/^[0-9]{1,14}$/.test(data.phone)) {
+  if (data.phone && !/^[0-9]{1,10}$/.test(data.phone)) {
     errors.phone =
-      "Ingresá un teléfono válido, solo con números y hasta 14 caracteres.";
+      "Ingresá un teléfono válido, solo con números y hasta 10 caracteres.";
   }
   if (data.gender && !GENDER_VALUES.includes(data.gender)) errors.gender = "Seleccioná una opción válida.";
 
@@ -215,12 +215,19 @@ if (duplicateDialogClose && duplicateDialog) {
 dniInput.addEventListener("input", () => {
   const normalized = normalizeDni(dniInput.value);
   dniInput.value = normalized;
-  dniPreview.textContent = normalized ? `DNI: ${normalized}` : "Ingresá 8 números, sin puntos.";
+
+  if (dniPreview) {
+    dniPreview.textContent = normalized
+      ? `DNI: ${normalized}`
+      : "Ingresá 8 números, sin puntos.";
+  }
 });
 
-phoneInput.addEventListener("input", () => {
-  phoneInput.value = phoneInput.value.replace(/[^0-9]/g, "").slice(0, 14);
-});
+if (phoneInput) {
+  phoneInput.addEventListener("input", () => {
+    phoneInput.value = phoneInput.value.replace(/[^0-9]/g, "").slice(0, 10);
+  });
+}
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();

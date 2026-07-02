@@ -123,8 +123,8 @@
                 inputmode="numeric"
                 autocomplete="tel"
                 required
-                maxlength="14"
-                pattern="[0-9]{1,14}"
+                maxlength="10"
+                pattern="[0-9]{1,10}"
                 placeholder="Ej: 2641234567"
                 />
               <p class="field-error" id="phone-error"></p>
@@ -209,9 +209,9 @@
         <button type="button" id="success-dialog-close">Aceptar</button>
       </div>
     </dialog>
+
     <dialog id="duplicate-dialog" class="dialog">
-        <div class="dialog__body">
-          <p class="eyebrow">Inscripción existente</p>
+        <div class="dialog__content">
           <h2>DNI ya registrado</h2>
           <p>Ya existe una inscripción registrada con ese DNI.</p>
           <button type="button" id="duplicate-dialog-close">Aceptar</button>
