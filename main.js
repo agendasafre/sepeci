@@ -1,4 +1,5 @@
 const GENDER_VALUES = ["Femenino", "Masculino", "No binario", "Otro"];
+const OTHER_PLACE_OF_BELONGING_VALUE = "otra-provincia-pais";
 const academicUnits = window.ACADEMIC_UNITS || [];
 const formConfig = window.FORM_CONFIG || {};
 
@@ -11,6 +12,9 @@ const academicUnitSelect = document.querySelector("#academicUnit");
 const academicUnitHint = document.querySelector("#academicUnit-hint");
 const otherAcademicUnitField = document.querySelector("#otherAcademicUnit-field");
 const otherAcademicUnitInput = document.querySelector("#otherAcademicUnit");
+const placeOfBelongingSelect = document.querySelector("#placeOfBelonging");
+const otherPlaceOfBelongingField = document.querySelector("#otherPlaceOfBelonging-field");
+const otherPlaceOfBelongingInput = document.querySelector("#otherPlaceOfBelonging");
 const successDialog = document.querySelector("#success-dialog");
 const successDialogClose = document.querySelector("#success-dialog-close");
 const duplicateDialog = document.querySelector("#duplicate-dialog");
@@ -60,6 +64,10 @@ function isOtherAcademicUnit(unitId) {
   return unitId === "otra-unidad-academica";
 }
 
+function isOtherPlaceOfBelonging(placeOfBelonging) {
+  return placeOfBelonging === OTHER_PLACE_OF_BELONGING_VALUE;
+}
+
 function renderAcademicUnitOptions(units) {
   academicUnitSelect.replaceChildren(new Option("Seleccioná una unidad", ""));
 
@@ -91,6 +99,17 @@ function updateOtherAcademicUnitVisibility() {
   }
 }
 
+function updateOtherPlaceOfBelongingVisibility() {
+  const shouldShow = isOtherPlaceOfBelonging(placeOfBelongingSelect.value);
+  otherPlaceOfBelongingField.hidden = !shouldShow;
+  otherPlaceOfBelongingInput.required = shouldShow;
+
+  if (!shouldShow) {
+    otherPlaceOfBelongingInput.value = "";
+    setFieldError("otherPlaceOfBelonging");
+  }
+}
+
 function setFieldError(name, message = "") {
   const input = form.elements[name];
   const field = input?.closest(".field");
@@ -112,6 +131,7 @@ function clearErrors() {
     "academicUnit",
     "otherAcademicUnit",
     "placeOfBelonging",
+    "otherPlaceOfBelonging",
   ].forEach((name) => setFieldError(name));
 }
 
@@ -141,6 +161,14 @@ function validateForm(data) {
 
   if (isOtherAcademicUnit(data.academicUnit) && !String(data.otherAcademicUnit || "").trim()) {
     errors.otherAcademicUnit = "Indicá el nombre de la unidad académica.";
+  }
+
+  if (isOtherPlaceOfBelonging(data.placeOfBelonging) && !String(data.otherPlaceOfBelonging || "").trim()) {
+    errors.otherPlaceOfBelonging = "Indicá la provincia o país de residencia.";
+  }
+
+  if (String(data.otherPlaceOfBelonging || "").trim().length > 100) {
+    errors.otherPlaceOfBelonging = "La provincia o país de residencia debe tener hasta 100 caracteres.";
   }
 
   return errors;
@@ -202,8 +230,10 @@ function applyServerFieldErrors(fields = {}) {
 
 loadAcademicUnits();
 updateOtherAcademicUnitVisibility();
+updateOtherPlaceOfBelongingVisibility();
 
 academicUnitSelect.addEventListener("change", updateOtherAcademicUnitVisibility);
+placeOfBelongingSelect.addEventListener("change", updateOtherPlaceOfBelongingVisibility);
 if (successDialogClose && successDialog) {
   successDialogClose.addEventListener("click", () => successDialog.close());
 }
@@ -258,7 +288,7 @@ form.addEventListener("submit", async (event) => {
   }
 
   submitButton.disabled = true;
-  submitButton.textContent = "Enviando…";
+  submitButton.textContent = "Enviando...";
 
   let response;
   let body = {};
@@ -291,6 +321,7 @@ form.addEventListener("submit", async (event) => {
     ) {
       form.reset();
       updateOtherAcademicUnitVisibility();
+      updateOtherPlaceOfBelongingVisibility();
 
       if (dniPreview) {
         dniPreview.textContent = "Ingresá 8 números, sin puntos.";

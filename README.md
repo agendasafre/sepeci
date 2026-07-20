@@ -7,7 +7,7 @@ Lightweight first slice for a public enrollment flow: static HTML/CSS/JavaScript
 1. Copy `.env.example` to `.env.local` in Vercel/local development.
 2. Replace the placeholder `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` values with the real Supabase project values when you are ready to submit records. Keep the service-role key server-only in Vercel/local env; never put it in browser code.
 3. Set `ALLOWED_ORIGIN` to the deployed site origin.
-4. Run `sql/001_enrollment_submissions.sql` in the Supabase SQL editor. If you had already created the older table, see `sql/002_migrate_dni_and_other_unit.sql`.
+4. Run `sql/001_enrollment_submissions.sql` in the Supabase SQL editor for a new database. For an existing database, apply the later migration files as needed, including `sql/003_add_other_place_of_belonging.sql`.
 5. Add the production splash image at `assets/splash.jpg`.
 
 ## Academic units
@@ -17,6 +17,10 @@ The academic-unit list is centralized in `academic-units.js`. The browser loads 
 The database intentionally does not duplicate the controlled list in a `CHECK` constraint. This keeps the project simple and avoids editing SQL every time the final list changes. Server-side validation in `api/submit.js` remains the source of truth before inserting into Supabase.
 
 Use the id `otra-unidad-academica` for the option that should display the extra free-text field. When that option is selected, the app stores the controlled value in `academic_unit` and the entered value in the nullable `other_academic_unit` column.
+
+## Residence department
+
+The residence department selector includes San Juan departments and the controlled value `otra-provincia-pais` for `Otra provincia/país`. When that option is selected, the app requires a free-text value up to 100 characters and stores it in the nullable `other_place_of_belonging` column. For regular departments, `other_place_of_belonging` is stored as `null`.
 
 ## Form closing date
 
@@ -46,6 +50,7 @@ vercel dev
 - Do not expose `SUPABASE_SERVICE_ROLE_KEY` in browser code or `NEXT_PUBLIC_`/client-prefixed variables.
 - All writes go through `POST /api/submit`.
 - DNI is normalized to the single `dni` column, must have 7 or 8 digits, and is protected by a unique constraint.
+- Existing databases need `sql/003_add_other_place_of_belonging.sql` before deploying the updated endpoint.
 - The honeypot and in-memory rate limit are first-slice abuse seams, not a durable anti-abuse system.
 
 ## Manual test checklist
@@ -57,6 +62,8 @@ vercel dev
 - Required fields show field-level attention.
 - Allowed gender values are exactly `Femenino`, `Masculino`, `No binario`, and `Otro`.
 - Academic unit rejects values outside the controlled list. Selecting `Otra unidad académica` requires the extra text field.
+- Selecting `Otra provincia/país` requires the residence free-text field with up to 100 characters.
+- Selecting a regular department hides and clears the residence free-text field.
 - A valid submission opens the success popup.
 - A repeated DNI returns the duplicate message.
 - Browser assets do not contain Supabase service-role credentials.

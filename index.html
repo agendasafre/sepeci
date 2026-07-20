@@ -21,7 +21,7 @@
             width="360"
             height="360"
           />
-          <p class="splash__text">Cargando formulario de inscripción…</p>
+          <p class="splash__text">Cargando formulario de inscripción...</p>
         </div>
       </section>
 
@@ -126,7 +126,7 @@
                 maxlength="10"
                 pattern="[0-9]{1,10}"
                 placeholder="Ej: 2641234567"
-                />
+              />
               <p class="field-error" id="phone-error"></p>
             </div>
 
@@ -181,8 +181,22 @@
                 <option value="Zonda">Zonda</option>
                 <option value="25 de Mayo">25 de Mayo</option>
                 <option value="9 de Julio">9 de Julio</option>
+                <option value="otra-provincia-pais">Otra provincia/país</option>
               </select>
               <p class="field-error" id="placeOfBelonging-error"></p>
+            </div>
+
+            <div class="field" id="otherPlaceOfBelonging-field" hidden>
+              <label for="otherPlaceOfBelonging"
+                >Provincia o país de residencia</label
+              >
+              <input
+                id="otherPlaceOfBelonging"
+                name="otherPlaceOfBelonging"
+                type="text"
+                maxlength="100"
+              />
+              <p class="field-error" id="otherPlaceOfBelonging-error"></p>
             </div>
 
             <div class="hp-field" aria-hidden="true">
@@ -211,11 +225,11 @@
     </dialog>
 
     <dialog id="duplicate-dialog" class="dialog">
-        <div class="dialog__content">
-          <h2>DNI ya registrado</h2>
-          <p>Ya existe una inscripción registrada con ese DNI.</p>
-          <button type="button" id="duplicate-dialog-close">Aceptar</button>
-        </div>
-      </dialog>
+      <div class="dialog__content">
+        <h2>DNI ya registrado</h2>
+        <p>Ya existe una inscripción registrada con ese DNI.</p>
+        <button type="button" id="duplicate-dialog-close">Aceptar</button>
+      </div>
+    </dialog>
   </body>
 </html>

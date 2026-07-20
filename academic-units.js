@@ -7,7 +7,7 @@
     },
     {
       id: "facultad-filosofia",
-      name: "Facultad de Filosifía, Humanidades y Artes",
+      name: "Facultad de Filosofía, Humanidades y Artes",
     },
     { id: "facultad-ciencias-sociales", name: "Facultad de Ciencias Sociales" },
     {

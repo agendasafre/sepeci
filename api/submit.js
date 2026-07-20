@@ -1,4 +1,5 @@
 const GENDER_VALUES = ["Femenino", "Masculino", "No binario", "Otro"];
+const OTHER_PLACE_OF_BELONGING_VALUE = "otra-provincia-pais";
 const {
   MAX_BODY_BYTES,
   getAcademicUnits,
@@ -17,6 +18,10 @@ function normalizeDni(value) {
 
 function isOtherAcademicUnit(unitId) {
   return unitId === "otra-unidad-academica";
+}
+
+function isOtherPlaceOfBelonging(placeOfBelonging) {
+  return placeOfBelonging === OTHER_PLACE_OF_BELONGING_VALUE;
 }
 
 function getClientKey(req) {
@@ -76,6 +81,7 @@ function validatePayload(payload, academicUnits) {
     "academicUnit",
     "otherAcademicUnit",
     "placeOfBelonging",
+    "otherPlaceOfBelonging",
   ]) {
     clean[key] = String(payload[key] || "").trim();
   }
@@ -107,6 +113,14 @@ function validatePayload(payload, academicUnits) {
     fields.otherAcademicUnit = "El nombre de la unidad académica es demasiado largo.";
   }
 
+  if (isOtherPlaceOfBelonging(clean.placeOfBelonging) && !clean.otherPlaceOfBelonging) {
+    fields.otherPlaceOfBelonging = "Indicá la provincia o país de residencia.";
+  }
+
+  if (clean.otherPlaceOfBelonging && clean.otherPlaceOfBelonging.length > 100) {
+    fields.otherPlaceOfBelonging = "La provincia o país de residencia debe tener hasta 100 caracteres.";
+  }
+
   return { fields, clean, dni, selectedAcademicUnit };
 }
 
@@ -132,6 +146,7 @@ async function insertSubmission(clean, dni, selectedAcademicUnit) {
       academic_unit: selectedAcademicUnit.name,
       other_academic_unit: isOtherAcademicUnit(selectedAcademicUnit.id) ? clean.otherAcademicUnit : null,
       place_of_belonging: clean.placeOfBelonging,
+      other_place_of_belonging: isOtherPlaceOfBelonging(clean.placeOfBelonging) ? clean.otherPlaceOfBelonging : null,
       metadata: {},
     }),
   });
